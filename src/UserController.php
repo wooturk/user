@@ -5,13 +5,21 @@ use App\Http\Controllers\Controller;
 use Google\Exception;
 use Illuminate\Http\Request;
 
-class CountryController extends Controller
+class UserController extends Controller
 {
 	function index(Request $request){
-		return Response::success("Lütfen Giriş Yapınız");
+		$data = [
+			['GET', 'users', 'Kullanıcı listesi'],
+			['GET', 'user', 'Servis Açıklaması'],
+			['POST', 'user', 'Kullanıcı Oluşturma'],
+			['GET', 'user/{id}', 'Tek Bir Kullanıcı Bilgisi'],
+			['PUT', 'user/{id}', 'Tek Bir Kullanıcı Günceleme'],
+			['DELETE', 'user/{id}', 'Tek Bir Kullanıcı Silme'],
+		];
+		return Response::success("Lütfen Giriş Yapınız", $data);
 	}
 	function list(Request $request){
-		if($rows = get_cusers( $request->all() )){
+		if($rows = get_users( $request->all() )){
 			return Response::success("Kullanıcı Bilgileri", $rows);
 		}
 		return Response::failure("Kullanıcı Bulunamadı");
@@ -23,12 +31,18 @@ class CountryController extends Controller
 		return Response::failure("Kullanıcı Bulunamadı");
 	}
 	function post(Request $request) {
+		if (!$request->hasHeader('X-Wooturk-Key')) {
+			return Response::failure("Bu işlem için yetkili değilsiniz");
+		}
+		if($request->header('X-Wooturk-Key')!=env('WOOTURK_KEY')){
+			return Response::failure("Anahtarnız bu işlem için geçerli değil");
+		}
 		$exception = '';
 		try {
 			$fields = $request->validate([
 				'name'       => 'required|string|max:255',
-				'code'       => 'required|string|max:32|unique:countries',
-				'state'      => 'required|boolean'
+				'email'      => 'required|email|unique:users',
+				'password'   => 'required|string|max:16',
 			]);
 			$row = create_user($fields);
 			if($row){
@@ -47,10 +61,9 @@ class CountryController extends Controller
 		try {
 			$fields = $request->validate([
 				'name'       => 'required|string|max:255',
-				'code'       => 'required|string|max:32|unique:brands',
-				'sort_order' => 'required|integer',
-				'state'      => 'required|boolean'
+				'password'   => 'required|string|max:16',
 			]);
+
 			$row = update_user($id, $fields);
 			if($row){
 				return Response::success("Kullanıcı Güncellendi", $row);
