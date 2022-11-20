@@ -4,6 +4,7 @@ namespace Wooturk;
 use App\Http\Controllers\Controller;
 use Google\Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 class UserController extends Controller
 {
